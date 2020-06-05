@@ -1,9 +1,12 @@
 // Copyright Alaa 2020
 
 #include "OpenDoor.h"
+#include "Components/PrimitiveComponent.h"
 #include "Engine/World.h"
 #include "GameFramework/Actor.h"
 #include "Gameframework/PlayerController.h"
+
+#define OUT
 
 // Sets default values for this component's properties
 UOpenDoor::UOpenDoor()
@@ -11,10 +14,7 @@ UOpenDoor::UOpenDoor()
 	// Set this component to be initialized when the game starts, and to be ticked every frame.  You can turn these features
 	// off to improve performance if you don't need them.
 	PrimaryComponentTick.bCanEverTick = true;
-
-	// ...
 }
-
 
 // Called when the game starts
 void UOpenDoor::BeginPlay()
@@ -35,13 +35,12 @@ void UOpenDoor::BeginPlay()
 	WhichActorOpens = GetWorld()->GetFirstPlayerController()->GetPawn();
 }
 
-
 // Called every frame
 void UOpenDoor::TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction)
 {
 	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
 
-	if (OpenPlate && OpenPlate->IsOverlappingActor(WhichActorOpens))
+	if (TotalMassOfActors() > MassToOpenDoors)
 	{
 		OpenDoor(DeltaTime);
 		DoorLastOpened = GetWorld()->GetTimeSeconds();
@@ -88,5 +87,23 @@ void UOpenDoor::CloseDoor(float DeltaTime)
 	CurrentYaw = FMath::Lerp(CurrentYaw, InitialYaw, DeltaTime * VelocityOfCloseDoor);
 	FRotator CloseDoor (0.f, CurrentYaw, 0.f);
 	GetOwner()->SetActorRotation(CloseDoor);
+}
+
+float UOpenDoor::TotalMassOfActors() const
+{
+	float TotalMass = 0.f;
+
+	// Find all overlapping actors.
+	TArray<AActor*> OverlappingActors;
+
+	OpenPlate->GetOverlappingActors(OUT OverlappingActors);
+
+	// Add up their masses
+	for (AActor* Actor: OverlappingActors) 
+	{
+		TotalMass += Actor->FindComponentByClass<UPrimitiveComponent>()->GetMass();
+	}
+
+	return TotalMass;
 }
 
