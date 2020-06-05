@@ -51,10 +51,12 @@ void UGrabber::Grab()
 {
 	FHitResult Hit = GetFirstPhysicsBodyInReach();
 	UPrimitiveComponent* ComponentToGrab = Hit.GetComponent();
+	AActor* ActorHit = Hit.GetActor();
 
 	// If we hit something then attach the physics handle.
-	if (Hit.GetActor()) 
+	if (ActorHit) 
 	{
+		if (!PhysicsHandle) { return;}
 		// TODO attach physics handle.
 		PhysicsHandle->GrabComponentAtLocation
 		(
@@ -67,7 +69,9 @@ void UGrabber::Grab()
 
 void UGrabber::Released()
 {
-	// TODO remove/release the physics handle.
+	if (!PhysicsHandle) { return; }
+	
+	// remove/release the physics handle.
 	PhysicsHandle->ReleaseComponent();
 }
 
@@ -75,6 +79,8 @@ void UGrabber::Released()
 void UGrabber::TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction)
 {
 	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
+
+	if (!PhysicsHandle) { return;}
 
 	// If the physics handle is attached
 	if (PhysicsHandle->GrabbedComponent) 
